@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zipkin
+spec:
+  selector:
+    matchLabels:
+      app: zipkin
+  template:
+    metadata:
+      labels:
+        app: zipkin
+    spec:
+      containers:
+      - name: zipkin
+        image: openzipkin/zipkin
+        ports:
+        - containerPort: 9411
+        resources:
+            requests:
+              cpu: "100m"  # Minimalna ilość CPU
+              memory: "256Mi"  # Minimalna ilość pamięci
+            limits:
+              cpu: "500m"  # Maksymalna ilość CPU
+              memory: "512Mi"  # Maksymalna ilość pamięci
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipkin-svc
+spec:
+  selector:
+    app: zipkin
+  ports:
+  - port: 9411
+    targetPort: 9411
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipkin-lb-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: zipkin
+  ports:
+  - port: 9411
+    targetPort: 9411
+

@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: RESVAULT-SERVICE
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/resvaultdb
+    username: postgres
+    password: postgres
+    driverClassName: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+  config:
+    import: configserver:${CONFIG_SERVER_URL:http://localhost:9296}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-30657164.okta.com/oauth2/default
+management:
+  tracing:
+    sampling:
+      probability: 0.1
+logging:
+  pattern: level=%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]
+
+#management:
+#  tracing:
+#    propagation:
+#      type: b3
+#    enabled: true
+#    baggage:
+#      enabled: true
+#      correlation:
+#        fields:
+#          - Authorization
+#          - accept-language
+#        enabled: true
+#      remote-fields:
+#        - Authorization
+#        - accept-language
+server:
+  port: 8088
+  servlet:
+    context-path: /api

@@ -1,0 +1,101 @@
+# PV
+# PVC
+# StatefulSet
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: manual
+  hostPath:
+    path: "/mnt/data"
+    type: DirectoryOrCreate
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+spec:
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  serviceName: postgres
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16.3
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+          - name: POSTGRES_PASSWORD
+            value: postgres
+        volumeMounts:
+        - name: postgres-initdb
+          mountPath: /docker-entrypoint-initdb.d
+        - name: postgres-persistent-storage
+          mountPath: /var/lib/postgres
+      volumes:
+        - name: postgres-persistent-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+        - name: postgres-initdb
+          configMap:
+            name: postgres-initdb-cm
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-initdb-cm
+data:
+  init.sql: |  
+    SELECT 'CREATE DATABASE resvaultdb'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'resvaultdb')\gexec
+    SELECT 'CREATE DATABASE progtrackdb'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'progtrackdb')\gexec
+    SELECT 'CREATE DATABASE activitymdb'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'activitymdb')\gexec
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  clusterIP: None
+  selector:
+    app: postgres
+  ports:
+  - port: 5432

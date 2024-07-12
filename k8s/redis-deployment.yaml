@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-app
+spec:
+  selector:
+    matchLabels:
+      app: redis-app
+  template:
+    metadata:
+      labels:
+        app: redis-app
+    spec:
+      containers:
+      - name: redis-app
+        image: redis:7.2.4
+        ports:
+        - containerPort: 6379
+        resources:
+            requests:
+              cpu: "100m"  # Minimalna ilość CPU
+              memory: "256Mi"  # Minimalna ilość pamięci
+            limits:
+              cpu: "500m"  # Maksymalna ilość CPU
+              memory: "512Mi"  # Maksymalna ilość pamięci
+        command:
+          - "redis-server"
+        args:
+          - "--protected-mode"
+          - "no"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  selector:
+    app: redis-app
+  ports:
+  - port: 6379
+    targetPort: 6379

@@ -1,0 +1,90 @@
+spring:
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+  application:
+    name: ACTIVITY-MANAGER
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/activitymdb
+    username: postgres
+    password: postgres
+    driverClassName: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+  config:
+    import: configserver:${CONFIG_SERVER_URL:http://localhost:9296}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-30657164.okta.com/oauth2/default
+      client:
+        registration:
+          internal-client:
+            provider: okta
+            authorization-grant-type: client_credentials
+            scope: internal
+            client-id: ${OKTA_LOGIN}
+            client-secret: ${OKTA_PASSWORD}
+        provider:
+          okta:
+            issuer-uri: https://dev-30657164.okta.com/oauth2/default
+
+
+management:
+  tracing:
+    sampling:
+      probability: 0.1
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+feign:
+#  client:
+#    config:
+#      httpBinClient:
+#        read-timeout: 50
+#        connect-timeout: 50
+  circuitbreaker:
+    enabled: true
+#    alphanumeric-ids:
+#      enabled: true
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        event-consumer-buffer-size: 10
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 5s
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-windows-size: 10
+        sliding-window-type: COUNT_BASED
+        registerHealthIndicator: true
+#    configs:
+#      default:
+#        registerHealthIndicator: true
+#        minimumNumberOfCalls: 5
+#        ailureRateThreshold: 50
+#    instances:
+#      ResVaultService:
+#        baseConfig: default
+
+#      ResVaultServicegetCourseByIdlong:
+#        minimumNumberOfCalls: 5
+#        failureRateThreshold: 50
+#  timelimiter:
+#    configs:
+#      default:
+#        timeoutDuration: 20s
+logging:
+  pattern: level=%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]
+server:
+  port: 8080
+

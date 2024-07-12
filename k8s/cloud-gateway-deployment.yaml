@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-gateway-app
+spec:
+  selector:
+    matchLabels:
+      app: cloud-gateway-app
+  template:
+    metadata:
+      labels:
+        app: cloud-gateway-app
+    spec:
+      containers:
+      - name: cloud-gateway-app
+        image: tanoer/cloudgateway
+        ports:
+        - containerPort: 8686
+        resources:
+            requests:
+              cpu: "100m"  # Minimalna ilość CPU
+              memory: "256Mi"  # Minimalna ilość pamięci
+            limits:
+              cpu: "500m"  # Maksymalna ilość CPU
+              memory: "512Mi"  # Maksymalna ilość pamięci
+        env:
+          - name: EUREKA_SERVER_ADDRESS
+            valueFrom:
+              configMapKeyRef:
+                key: eureka_service_address
+                name: eureka-cm
+          - name: CONFIG_SERVER_URL
+            valueFrom:
+              configMapKeyRef:
+                key: config_url
+                name: config-cm
+          - name: OKTA_LOGIN
+            valueFrom:
+              configMapKeyRef:
+                key: login
+                name: okta-login-cm
+          - name: OKTA_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                key: pass
+                name: okta-login-cm
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-gateway-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: cloud-gateway-app
+  ports:
+  - port: 80
+    targetPort: 8686
+
+

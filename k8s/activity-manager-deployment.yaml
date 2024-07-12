@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: activity-manager-app
+spec:
+  selector:
+    matchLabels:
+      app: activity-manager-app
+  template:
+    metadata:
+      labels:
+        app: activity-manager-app
+    spec:
+      containers:
+      - name: activity-manager-app
+        image: tanoer/activitymanager
+        ports:
+        - containerPort: 8080
+        resources:
+            requests:
+              cpu: "100m"  # Minimalna ilość CPU
+              memory: "256Mi"  # Minimalna ilość pamięci
+            limits:
+              cpu: "500m"  # Maksymalna ilość CPU
+              memory: "512Mi"  # Maksymalna ilość pamięci
+        env:
+          - name: EUREKA_SERVER_ADDRESS
+            valueFrom:
+              configMapKeyRef:
+                key: eureka_service_address
+                name: eureka-cm
+          - name: CONFIG_SERVER_URL
+            valueFrom:
+              configMapKeyRef:
+                key: config_url
+                name: config-cm
+          - name: DB_HOST
+            valueFrom:
+              configMapKeyRef:
+                key: hostname
+                name: postgres-cm
+          - name: OKTA_LOGIN
+            valueFrom:
+              configMapKeyRef:
+                key: login
+                name: okta-login-cm
+          - name: OKTA_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                key: pass
+                name: okta-login-cm
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: activity-manager-svc
+spec:
+  selector:
+    app: activity-manager-app
+  ports:
+  - port: 80
+    targetPort: 8080
+

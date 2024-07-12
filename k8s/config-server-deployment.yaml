@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-server-app
+spec:
+  selector:
+    matchLabels:
+      app: config-server-app
+  template:
+    metadata:
+      labels:
+        app: config-server-app
+    spec:
+      containers:
+      - name: config-server-app
+        image: tanoer/configserver
+        ports:
+        - containerPort: 9296
+        resources:
+            requests:
+              cpu: "100m"  # Minimalna ilość CPU
+              memory: "256Mi"  # Minimalna ilość pamięci
+            limits:
+              cpu: "500m"  # Maksymalna ilość CPU
+              memory: "512Mi"  # Maksymalna ilość pamięci
+        env:
+          - name: EUREKA_SERVER_ADDRESS
+            valueFrom:
+              configMapKeyRef:
+                key: eureka_service_address
+                name: eureka-cm
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: config-server-svc
+spec:
+  selector:
+    app: config-server-app
+  ports:
+  - port: 80
+    targetPort: 9296
+

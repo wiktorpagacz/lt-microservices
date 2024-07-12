@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: PROGTRACK-SERVICE
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/progtrackdb
+    username: postgres
+    password: postgres
+    driverClassName: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+  config:
+    import: configserver:${CONFIG_SERVER_URL:http://localhost:9296}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-30657164.okta.com/oauth2/default
+server:
+  port: 8083
